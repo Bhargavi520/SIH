@@ -1,0 +1,381 @@
+<!DOCTYPE html> 
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faculty Dashboard - HEI Platform</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+    }
+
+    header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .dashboard {
+      display: flex;
+      height: calc(100vh - 70px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 25%;
+      background: #fff;
+      padding: 20px;
+      border-right: 1px solid #ddd;
+      overflow-y: auto;
+    }
+
+    .mentor-box {
+      background: #f0f4ff;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .student-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .student-list li {
+      padding: 12px;
+      margin: 6px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      background: #fafafa;
+    }
+
+    .student-list li:hover {
+      background: #e6f0ff;
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .overview {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    .overview h3 {
+      margin-bottom: 10px;
+    }
+
+    .recent-uploads ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .recent-uploads li {
+      padding: 10px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .recent-uploads li:last-child {
+      border-bottom: none;
+    }
+
+    a.proof-link {
+      color: #007bff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    a.proof-link:hover {
+      text-decoration: underline;
+    }
+
+    .charts {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 30px;
+    }
+
+    .chart-box {
+      flex: 1;
+      min-width: 320px;
+      background: #fff;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      background: #fff;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: center;
+    }
+
+    table th {
+      background: #007bff;
+      color: white;
+    }
+
+    .action-btn {
+      padding: 6px 12px;
+      margin: 2px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      color: white;
+    }
+    .approve { background: #28a745; }
+    .reject { background: #dc3545; }
+    .approve:hover { background: #218838; }
+    .reject:hover { background: #c82333; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Faculty Dashboard</h1>
+  </header>
+
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="mentor-box">
+        <h2>Mentor</h2>
+        <p><strong>Dr. Priya Sharma</strong></p>
+        <p>Total Students: 5</p>
+      </div>
+      <h3>My Students</h3>
+      <ul class="student-list" id="studentList"></ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+      <!-- Overview Section -->
+      <div class="overview" id="overviewSection">
+        <h2>Welcome, Dr. Priya Sharma</h2>
+        <p><strong>Pending Verifications:</strong> <span id="pendingCount">0</span></p>
+
+        <div class="recent-uploads">
+          <h3>Recent Student Uploads</h3>
+          <ul id="recentUploads"></ul>
+        </div>
+      </div>
+
+      <h2 id="studentName">Select a student to view details</h2>
+      <div class="charts" id="chartsSection" style="display:none;">
+        <div class="chart-box">
+          <h3>Activity Breakdown</h3>
+          <canvas id="performanceChart"></canvas>
+        </div>
+        <div class="chart-box">
+          <h3>Performance Over the Year</h3>
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Activity Lists -->
+      <div id="activitiesSection" style="display:none;">
+        <h3>Pending Activities</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Activity</th>
+              <th>Date</th>
+              <th>Proof</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="pendingTable"></tbody>
+        </table>
+
+        <h3>Approved Activities</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Activity</th>
+              <th>Date</th>
+              <th>Proof</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="approvedTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Dummy Data
+    const studentData = {
+      "Student A": {
+        chart: [5, 2, 1],
+        trend: [1, 2, 1, 1, 2, 1, 0, 0, 1, 0, 0, 0],
+        activities: [
+          { name: "Hackathon Participation", date: "Jan 2025", status: "Approved", proof: "proofs/hackathon.pdf" },
+          { name: "Cultural Event", date: "Feb 2025", status: "Pending", proof: "proofs/cultural.pdf" },
+          { name: "Research Paper", date: "Mar 2025", status: "Pending", proof: "proofs/research.pdf" }
+        ]
+      },
+      "Student B": {
+        chart: [3, 1, 0],
+        trend: [0, 1, 0, 1, 0, 1, 1, 0, 0, 0, 0, 0],
+        activities: [
+          { name: "Internship", date: "Jan 2025", status: "Approved", proof: "proofs/internship.pdf" },
+          { name: "Workshop", date: "Feb 2025", status: "Pending", proof: "proofs/workshop.pdf" }
+        ]
+      }
+    };
+
+    // Populate Student List
+    const studentList = document.getElementById("studentList");
+    for (let student in studentData) {
+      const li = document.createElement("li");
+      li.innerText = student;
+      li.onclick = () => loadStudent(student);
+      studentList.appendChild(li);
+    }
+
+    // Overview Stats
+    function updateOverview() {
+      let pendingCount = 0;
+      let uploads = [];
+
+      for (let student in studentData) {
+        studentData[student].activities.forEach(act => {
+          if (act.status === "Pending") pendingCount++;
+          uploads.push({ student, ...act });
+        });
+      }
+
+      // Show pending count
+      document.getElementById("pendingCount").innerText = pendingCount;
+
+      // Show 5 most recent uploads
+      uploads = uploads.slice(-5).reverse();
+      const recentList = document.getElementById("recentUploads");
+      recentList.innerHTML = "";
+      uploads.forEach(up => {
+        recentList.innerHTML += `<li><strong>${up.student}</strong>: ${up.name} 
+          (<a href="${up.proof}" target="_blank" class="proof-link">Proof</a>) - ${up.status}</li>`;
+      });
+    }
+
+    updateOverview();
+
+    let chart, trendChart;
+    let currentStudent = null;
+
+    function loadStudent(student) {
+      currentStudent = student;
+      document.getElementById("studentName").innerText = student + " - Performance";
+      document.getElementById("chartsSection").style.display = "flex";
+      document.getElementById("activitiesSection").style.display = "block";
+      document.getElementById("overviewSection").style.display = "none";
+
+      renderCharts(student);
+      renderTables(student);
+    }
+
+    function renderCharts(student) {
+      const ctx = document.getElementById("performanceChart").getContext("2d");
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: ['Approved', 'Pending', 'Rejected'],
+          datasets: [{
+            data: studentData[student].chart,
+            backgroundColor: ['#4caf50', '#ff9800', '#f44336']
+          }]
+        }
+      });
+
+      const ctx2 = document.getElementById("trendChart").getContext("2d");
+      if (trendChart) trendChart.destroy();
+      trendChart = new Chart(ctx2, {
+        type: 'line',
+        data: {
+          labels: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+          datasets: [{
+            label: 'Approved Activities',
+            data: studentData[student].trend,
+            borderColor: '#007bff',
+            fill: false,
+            tension: 0.3
+          }]
+        }
+      });
+    }
+
+    function renderTables(student) {
+      const pendingTable = document.getElementById("pendingTable");
+      const approvedTable = document.getElementById("approvedTable");
+      pendingTable.innerHTML = "";
+      approvedTable.innerHTML = "";
+
+      studentData[student].activities.forEach((act, index) => {
+        if (act.status === "Approved") {
+          approvedTable.innerHTML += `<tr>
+            <td>${act.name}</td>
+            <td>${act.date}</td>
+            <td><a href="${act.proof}" target="_blank" class="proof-link">View Proof</a></td>
+            <td>${act.status}</td>
+          </tr>`;
+        } else if (act.status === "Pending") {
+          pendingTable.innerHTML += `
+            <tr>
+              <td>${act.name}</td>
+              <td>${act.date}</td>
+              <td><a href="${act.proof}" target="_blank" class="proof-link">View Proof</a></td>
+              <td>${act.status}</td>
+              <td>
+                <button class="action-btn approve" onclick="approveActivity('${student}', ${index})">Approve</button>
+                <button class="action-btn reject" onclick="rejectActivity('${student}', ${index})">Reject</button>
+              </td>
+            </tr>`;
+        }
+      });
+    }
+
+    function approveActivity(student, index) {
+      studentData[student].activities[index].status = "Approved";
+      studentData[student].chart[0] += 1; // approved
+      studentData[student].chart[1] -= 1; // pending
+      loadStudent(student);
+      updateOverview();
+    }
+
+    function rejectActivity(student, index) {
+      studentData[student].activities[index].status = "Rejected";
+      studentData[student].chart[2] += 1; // rejected
+      studentData[student].chart[1] -= 1; // pending
+      loadStudent(student);
+      updateOverview();
+    }
+  </script>
+</body>
+</html>

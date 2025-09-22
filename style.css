@@ -1,0 +1,248 @@
+/* Stats Section */
+.stats {
+  position: relative;
+  background: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1600&q=80') no-repeat center/cover;
+  padding: 80px 20px;
+  text-align: center;
+  color: white;
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+}
+
+/* Overlay for readability */
+.stats::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  /* 👈 keeps text visible */
+  z-index: 1;
+}
+
+.stats .stat {
+  position: relative;
+  z-index: 2;
+  font-size: 28px;
+  font-weight: bold;
+  color: #facc15;
+  /* 👈 golden yellow for numbers */
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.5);
+}
+
+
+/* Why Section */
+.why {
+  position: relative;
+  background: url('https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=1600&q=80') no-repeat center/cover;
+  padding: 80px 20px;
+  text-align: center;
+  color: white;
+}
+
+/* Overlay for readability */
+.why::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  /* 👈 dark overlay */
+  z-index: 1;
+}
+
+.why h2,
+.why ul {
+  position: relative;
+  z-index: 2;
+  /* 👈 keeps text above overlay */
+}
+
+.why h2 {
+  font-size: 32px;
+  margin-bottom: 20px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-weight: bold;
+  color: #fcd34d;
+  /* 👈 highlight title in golden-yellow */
+}
+
+.why ul {
+  list-style: none;
+  padding: 0;
+  font-size: 20px;
+  line-height: 1.8;
+}
+
+.why li::before {
+  content: "✔ ";
+  color: #22c55e;
+  /* green tick */
+  font-weight: bold;
+}
+
+/* Background */
+/* Background for login pages */
+body.login-body {
+  background: url('https://images.unsplash.com/photo-1524865291454-215bdc75819e?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')
+    no-repeat center center/cover;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-family: Arial, sans-serif;
+}
+
+
+.login-container {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 40px;
+  border-radius: 16px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+  max-width: 450px;
+  width: 90%;
+  text-align: center;
+}
+
+
+.login-container h1 {
+  margin-bottom: 25px;
+  font-size: 24px;
+  color: #1e3a8a;
+}
+
+/* Role cards inside the box */
+.role-boxes {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.role-card {
+  display: block;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 10px;
+  text-decoration: none;
+  color: #111;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: 0.3s;
+}
+
+.role-card strong {
+  display: block;
+  font-size: 18px;
+  margin-top: 5px;
+  color: #1e3a8a;
+}
+
+.role-card p {
+  font-size: 14px;
+  color: #555;
+  margin-top: 5px;
+}
+
+.role-card:hover {
+  background: #2563eb;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.role-card:hover strong {
+  color: white;
+}
+
+.role-card:hover p {
+  color: #f1f5f9;
+}
+
+.login-container form {
+  margin-top: 15px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.login-container input,
+.login-container .btn {
+  width: 100%;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+}
+
+.login-container .btn {
+  background: #2563eb;
+  color: white;
+  border: none;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.login-container .btn:hover {
+  background: #1e40af;
+}
+
+
+/* fact */
+.add-activity-form {
+  background: #fff;
+  padding: 20px;
+  margin: 20px 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.add-activity-form h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+
+.add-activity-form form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.add-activity-form input,
+.add-activity-form select {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.activity-list table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.activity-list th,
+.activity-list td {
+  padding: 12px;
+  border-bottom: 1px solid #ddd;
+  text-align: left;
+}
+
+.status.pending {
+  color: orange;
+  font-weight: bold;
+}
+
+.status.approved {
+  color: green;
+  font-weight: bold;
+}
+

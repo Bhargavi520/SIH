@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HEI Student Portal</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+  :root {
+    --bg:#ffffff;
+    --text:#333;
+    --accent1:#ffe5e5; /* pastel coral */
+    --accent2:#e5f7ff; /* pastel blue */
+    --accent3:#fff5e5; /* pastel peach */
+    --card:#ffffff;
+    --shadow:rgba(0,0,0,0.08);
+  }
+  *{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif;}
+  body{display:flex;min-height:100vh;background:var(--bg);color:var(--text);}
+  
+  /* Sidebar */
+  .sidebar{
+    width:260px;
+    background:var(--card);
+    padding:2rem 1rem;
+    display:flex;
+    flex-direction:column;
+    box-shadow:2px 0 6px rgba(0,0,0,0.1);
+    position:sticky;
+    top:0;
+    height:100vh;
+  }
+  .sidebar h2{text-align:center;color:#555;margin-bottom:2rem;}
+  .sidebar button{
+    background:none;border:none;text-align:left;padding:.75rem 1rem;margin-bottom:.5rem;
+    border-radius:6px;font-weight:600;cursor:pointer;transition:.3s;width:100%;
+  }
+  .sidebar button:hover,.sidebar button.active{background:var(--accent2);}
+  
+  /* Main content */
+  .main-content{flex:1;padding:2rem;overflow-y:auto;}
+  .section{display:none;}
+  .section.active{display:block;}
+  
+  /* Cards */
+  .card-container{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1.5rem;margin-bottom:1.5rem;}
+  .card{
+    background:var(--card);
+    border-radius:12px;
+    padding:1.5rem;
+    box-shadow:0 2px 8px var(--shadow);
+    transition:transform .2s,box-shadow .2s;
+  }
+  .card:hover{transform:translateY(-4px);box-shadow:0 4px 16px var(--shadow);}
+  .card h3{margin-bottom:1rem;color:#555;}
+  .card p{font-size:.9rem;margin-bottom:1rem;}
+  .card button{padding:.5rem 1rem;border:none;border-radius:6px;background:#ff8c94;color:white;cursor:pointer;transition:.3s;}
+  .card button:hover{background:#ff6b81;}
+  
+  /* Tables */
+  table{width:100%;border-collapse:collapse;margin-top:1rem;}
+  table th, table td{text-align:left;padding:.75rem;border-bottom:1px solid #eee;}
+  table th{color:#555;}
+  table tr:hover{background:var(--accent1);}
+  
+  /* Profile */
+  .profile{display:flex;gap:2rem;margin-bottom:2rem;align-items:flex-start;}
+  .profile img{width:120px;height:120px;border-radius:50%;object-fit:cover;border:3px solid #ff8c94;}
+  .profile-details h3{font-size:1.5rem;margin-bottom:.5rem;}
+  .profile-details p{font-size:.95rem;margin-bottom:.25rem;}
+  .badges span{margin-right:5px;margin-top:3px;display:inline-block;background:var(--accent3);padding:3px 8px;border-radius:12px;font-size:.85rem;}
+  
+  /* Tabs for profile sections */
+  .tab{margin-top:10px;border-radius:12px;overflow:hidden;border:1px solid #eee;}
+  .tab-header{padding:12px 16px;background:#fafafa;cursor:pointer;display:flex;justify-content:space-between;font-weight:600;}
+  .tab-content{display:none;padding:12px 16px;}
+  .tab.active .tab-content{display:block;}
+  .progress{background:#eee;border-radius:8px;height:10px;margin:6px 0;overflow:hidden;}
+  .progress span{display:block;height:100%;border-radius:8px;}
+
+   /* Status labels */
+  .status {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    display: inline-block;
+  }
+  .status.verified {
+    background: #d4edda;
+    color: #155724;
+  }
+  .status.rejected {
+    background: #f8d7da;
+    color: #721c24;
+  }
+  
+  /* Modal */
+  .modal{display:none;position:fixed;z-index:10;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);justify-content:center;align-items:center;}
+  .modal-content{background:var(--card);padding:2rem;border-radius:12px;width:90%;max-width:500px;text-align:center;}
+  .modal-content button{margin-top:1rem;background:#ff8c94;padding:.5rem 1rem;border:none;color:white;border-radius:6px;cursor:pointer;}
+  
+  /* Chart */
+  .chart-container {margin-top:1rem;max-width:100%;height:300px;}
+  .chart-container canvas{width:100% !important;height:100% !important;}
+  
+  /* Responsive */
+  @media(max-width:768px){.sidebar{width:200px;padding:1rem;}.card-container{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+  <h2>Student Portal</h2>
+  <button onclick="showSection('dashboard')" class="active">Dashboard</button>
+  <button onclick="showSection('profile')">Profile</button>
+  <button onclick="showSection('achievements')">Achievements</button>
+  <button onclick="showSection('portfolio')">Portfolio</button>
+  <button onclick="showSection('recommendations')">AI Recommendations</button>
+  <button onclick="showSection('skillgap')">Skill Gap Analysis</button>
+  <button onclick="showSection('mentorship')">Mentorship</button>
+  <button onclick="showSection('documents')">Documents</button>
+</div>
+
+<!-- Main content -->
+<div class="main-content">
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="section active">
+    <h2>Dashboard</h2>
+    <div class="profile">
+      <img src="https://via.placeholder.com/120" alt="Student Photo">
+      <div class="profile-details">
+        <h3>John Doe</h3>
+        <p>Admission Year: 2023</p>
+        <p>Current Year: 3</p>
+        <p>CGPA: 8.7</p>
+      </div>
+    </div>
+    <div class="card-container">
+      <div class="card"><h3>Total Achievements</h3><p>12 academic & non-academic achievements.</p></div>
+      <div class="card"><h3>Points & Badges</h3><p>Earned 350 points & 5 badges.</p></div>
+      <div class="card"><h3>Portfolio Progress</h3><p>3 Projects, 2 Internships, 1 Competition completed.</p></div>
+    </div>
+    <!-- Motivational Achievements Graph -->
+    <div class="card">
+      <h3>Achievements Over Time</h3>
+      <div class="chart-container">
+        <canvas id="achievementsChart"></canvas>
+      </div>
+      <p style="font-size:0.85rem;color:#666;margin-top:5px;">Track your progress to stay motivated!</p>
+    </div>
+  </div>
+
+  <!-- Profile -->
+  <div id="profile" class="section">
+    <h2>Profile</h2>
+    <div class="profile">
+      <img src="https://i.pravatar.cc/120?img=12">
+      <div class="profile-details">
+        <h3>John Doe</h3>
+        <p><strong>Field Enrolled:</strong> B.Tech in Computer Science (Cybersecurity)</p>
+        <p><strong>Year of Study:</strong> 3rd Year</p>
+        <p><strong>Admission Year:</strong> 2023</p>
+        <p><strong>CGPA:</strong> 8.7</p>
+        <p><strong>SGPA (Current Semester):</strong> 9.0</p>
+        <p class="badges"><strong>Badges Earned:</strong> 
+          <span>Bronze</span>
+          <span>Silver</span>
+          <span>Gold</span>
+          <span>Platinum</span>
+          <span>Diamond</span>
+        </p>
+        <!-- Tabs for Skills, Interests, Hobbies -->
+        <div class="tab" onclick="toggleTab(this)">
+          <div class="tab-header">Skills</div>
+          <div class="tab-content">
+            <p>Python</p><div class="progress"><span style="width:80%;background:#ffb6b9;"></span></div>
+            <p>Networking</p><div class="progress"><span style="width:65%;background:#ffd6a5;"></span></div>
+            <p>Penetration Testing</p><div class="progress"><span style="width:70%;background:#caffbf;"></span></div>
+            <p>Web Security</p><div class="progress"><span style="width:50%;background:#9bf6ff;"></span></div>
+          </div>
+        </div>
+        <div class="tab" onclick="toggleTab(this)">
+          <div class="tab-header">Interests</div>
+          <div class="tab-content">
+            <span class="badge">Cybersecurity</span>
+            <span class="badge">Ethical Hacking</span>
+            <span class="badge">AI</span>
+            <span class="badge">Cloud Security</span>
+          </div>
+        </div>
+        <div class="tab" onclick="toggleTab(this)">
+          <div class="tab-header">Hobbies</div>
+          <div class="tab-content">
+            <span class="badge">Chess</span>
+            <span class="badge">Coding Challenges</span>
+            <span class="badge">Open Source Contribution</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Achievements -->
+<div id="achievements" class="section">
+  <h2>Achievements</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Type</th>
+        <th>Impact</th>
+        <th>Status</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Smart India Hackathon</td>
+        <td>Competition</td>
+        <td>High</td>
+        <td><span class="status verified">Verified</span></td>
+        <td><button onclick="showModal('Smart India Hackathon')">View</button></td>
+      </tr>
+      <tr>
+        <td>Cybersecurity Certificate</td>
+        <td>Certification</td>
+        <td>Medium</td>
+        <td><span class="status rejected">Rejected</span></td>
+        <td><button onclick="showModal('Cybersecurity Certificate')">View</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <button style="margin-top:1rem;" onclick="alert('Add Achievement')">Add Achievement</button>
+</div>
+
+  <!-- Portfolio -->
+  <div id="portfolio" class="section">
+    <h2>Portfolio Preview</h2>
+    <div class="card-container">
+      <div class="card"><h3>Project: Network Analyzer</h3><p>Developed a network traffic analyzer using Python.</p></div>
+      <div class="card"><h3>Internship: TAC Security</h3><p>Worked on Red Team cybersecurity operations.</p></div>
+      <div class="card"><h3>Competition: Hackathon 2025</h3><p>Winner of Smart India Hackathon 2025.</p></div>
+    </div>
+  </div>
+
+  <!-- AI Recommendations -->
+  <div id="recommendations" class="section">
+    <h2>AI Recommendations</h2>
+    <div class="card-container">
+      <div class="card"><h3>Certifications</h3><p>Suggested: eJPT, OSCP foundational courses.</p></div>
+      <div class="card"><h3>Projects</h3><p>Suggested: Vulnerability Assessment Tool, Secure Web App.</p></div>
+      <div class="card"><h3>Competitions</h3><p>Suggested: Capture The Flag (CTF) contests, Hackathons.</p></div>
+      <div class="card"><h3>Internships</h3><p>Suggested: EY Cybersecurity, TAC Security Red Team.</p></div>
+    </div>
+  </div>
+
+  <!-- Skill Gap Analysis -->
+  <div id="skillgap" class="section">
+    <h2>Skill Gap Analysis</h2>
+    <div class="chart-container">
+      <canvas id="skillChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Mentorship -->
+  <div id="mentorship" class="section">
+    <h2>Mentorship Suggestions</h2>
+    <div class="card-container">
+      <div class="card"><h3>Faculty Mentor</h3><p>Dr. Smith - Cybersecurity Expert</p></div>
+      <div class="card"><h3>Peer Mentor</h3><p>Jane Smith - Experienced in CTFs</p></div>
+    </div>
+  </div>
+
+  <!-- Documents -->
+  <div id="documents" class="section">
+    <h2>Documents</h2>
+    <div class="card-container">
+      <div class="card"><h3>Transcript</h3><button onclick="alert('View Transcript')">View</button></div>
+      <div class="card"><h3>Certificate</h3><button onclick="alert('View Certificate')">View</button></div>
+      <div class="card"><h3>Award Letter</h3><button onclick="alert('View Award Letter')">View</button></div>
+    </div>
+    <button style="margin-top:1rem;" onclick="alert('Upload Document')">Upload Document</button>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <h3 id="modalTitle">Details</h3>
+    <p>More information about the selected item.</p>
+    <button onclick="closeModal()">Close</button>
+  </div>
+</div>
+
+<script>
+  // Section navigation
+  function showSection(id){
+    document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+    document.querySelectorAll('.sidebar button').forEach(b=>b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    document.querySelector(".sidebar button[onclick*='"+id+"']").classList.add('active');
+  }
+
+  // Modal
+  function showModal(name){
+    document.getElementById('modalTitle').innerText = name;
+    document.getElementById('modal').style.display='flex';
+  }
+  function closeModal(){document.getElementById('modal').style.display='none';}
+
+  // Toggle tabs
+  function toggleTab(el){
+    el.classList.toggle('active');
+  }
+
+  // Skill Gap Chart
+  const ctx = document.getElementById('skillChart').getContext('2d');
+  const skillChart = new Chart(ctx,{
+    type:'radar',
+    data:{
+      labels:['Python','Networking','Ethical Hacking','Web Security','CTF Skills','Cloud Security'],
+      datasets:[{
+        label:'Current Skill Level',
+        data:[8,6,7,5,4,3],
+        backgroundColor:'rgba(255,182,185,0.2)',
+        borderColor:'rgba(255,182,185,1)',
+        borderWidth:2
+      },{
+        label:'Target Level',
+        data:[10,8,9,8,7,7],
+        backgroundColor:'rgba(255,214,165,0.2)',
+        borderColor:'rgba(255,214,165,1)',
+        borderWidth:2
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,scales:{r:{beginAtZero:true,max:10}}}
+  });
+
+  // Achievements Over Time Chart (Dashboard)
+  const ctx2 = document.getElementById('achievementsChart').getContext('2d');
+  const achievementsChart = new Chart(ctx2,{
+    type:'bar',
+    data:{
+      labels:['Jan','Feb','Mar','Apr','May','Jun'],
+      datasets:[
+        {type:'bar',label:'Monthly Achievements',data:[2,3,4,3,5,6],backgroundColor:'#ffb6b9'},
+        {type:'line',label:'Cumulative Achievements',data:[2,5,9,12,17,23],borderColor:'#ffd6a5',borderWidth:3,fill:false,tension:0.3}
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{legend:{position:'top'}},
+      scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}
+    }
+  });
+</script>
+
+</body>
+</html>

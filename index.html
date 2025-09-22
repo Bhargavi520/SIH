@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EduMint</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background: #f4f6f9;
+    }
+
+    /* Header */
+    header {
+      background: #1e3a8a;
+      color: white;
+      padding: 15px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { margin: 0; font-size: 20px; }
+    nav a {
+      color: white;
+      margin-left: 20px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    nav a:hover { text-decoration: underline; }
+
+    /* Hero Section */
+    .hero {
+      background: url('https://images.unsplash.com/photo-1529070538774-1843cb3265df?auto=format&fit=crop&w=1600&q=80') no-repeat center center/cover;
+      color: white;
+      
+      text-align: center;
+      padding: 100px 20px;
+    }
+    .hero h2 { font-size: 32px; margin-bottom: 10px; }
+    .hero p { font-size: 18px; margin-bottom: 20px; }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    .btn-primary:hover { background: #1e40af; }
+
+    /* Features Section */
+    .features {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      padding: 50px 20px;
+      background: url('https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=1600&q=80') no-repeat center/cover;
+    }
+    .card {
+      background: rgba(255,255,255,0.9);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 300px;
+      text-align: center;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .card h3 { margin-bottom: 10px; }
+
+    /* Stats Section */
+    .stats {
+      background: url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1600&q=80') no-repeat center/cover;
+      padding: 50px 20px;
+      color: white;
+      text-align: center;
+      display: flex;
+      justify-content: center;
+      gap: 40px;
+    }
+    .stat {
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    /* Why Section */
+    .why {
+      background: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1600&q=80') no-repeat center/cover;
+      padding: 50px 20px;
+      color: white;
+      text-align: center;
+    }
+    .why ul {
+      list-style: none;
+      padding: 0;
+      font-size: 18px;
+    }
+    .why li::before {
+      content: "✔ ";
+      color: #00ff99;
+    }
+
+    /* Footer */
+    footer {
+      background: #1e3a8a;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+    footer a { color: #fcd34d; text-decoration: none; margin: 0 10px; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <h1>EduMint</h1>
+    <nav>
+      <a href="#">Home</a>
+      <a href="#">About</a>
+      <a href="#">Login</a>
+    </nav>
+  </header>
+
+  <!-- Hero -->
+  <section class="hero">
+    <h2>Centralized Student Activity Record Platform for HEIs</h2>
+    <p>One place to record, verify, and track student achievements.</p>
+    <button class="btn-primary" onclick="window.location.href='login.html'">Get Started</button>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="card">
+      <h3>🎓 For Students</h3>
+      <p>Record achievements & build your portfolio.</p>
+    </div>
+    <div class="card">
+      <h3>👨‍🏫 For Faculty</h3>
+      <p>Verify & validate student activities.</p>
+    </div>
+    <div class="card">
+      <h3>🏫 For Admins</h3>
+      <p>Generate audit-ready reports.</p>
+    </div>
+  </section>
+
+  <!-- Impact Stats -->
+  <section class="stats">
+    <div class="stat">1200+ Students</div>
+    <div class="stat">340+ Activities Submitted</div>
+    <div class="stat">210 Approved Activities</div>
+  </section>
+
+  <!-- Why Section -->
+  <section class="why">
+    <h2>Why This Platform?</h2>
+    <ul>
+      <li>No need for scattered paper records</li>
+      <li>Easy approval workflow</li>
+      <li>Audit-ready exports for NAAC/NBA</li>
+    </ul>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>
+      <a href="#">About</a> | 
+      <a href="#">Contact</a> | 
+      <a href="#">Privacy</a>
+    </p>
+    <p>Built during Smart India Hackathon 2025 🚀</p>
+  </footer>
+
+</body>
+</html>

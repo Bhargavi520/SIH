@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>HEI Admin — Roles, Accreditation, Reports</title>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  /* -------------------------
+     Basic layout
+     ------------------------- */
+  :root{
+    --bg:#f4f7fb; --card:#ffffff; --accent:#2f80ed; --muted:#64748b;
+    --success:#16a34a; --danger:#ef4444; --glass: rgba(255,255,255,0.7);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,Segoe UI,Roboto,Arial;background:var(--bg);color:#0f172a}
+  .app{display:flex;min-height:100vh}
+
+  /* Sidebar */
+  .sidebar{width:260px;background:linear-gradient(180deg,#fff,#f7fbff);border-right:1px solid #e6eef8;padding:18px;flex-shrink:0}
+  .brand{font-weight:700;color:var(--accent);font-size:18px;margin-bottom:16px}
+  .nav{display:flex;flex-direction:column;gap:6px}
+  .nav button{background:transparent;border:none;text-align:left;padding:10px;border-radius:8px;cursor:pointer;color:#0f172a;font-weight:600}
+  .nav button.active{background:rgba(47,128,237,0.12);color:var(--accent)}
+  .small{font-size:13px;color:var(--muted)}
+
+  /* Main area */
+  .main{flex:1;padding:18px}
+  header.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+  header.top .right{display:flex;gap:10px;align-items:center}
+  header.top h1{margin:0;font-size:18px}
+  .container{background:var(--card);padding:16px;border-radius:10px;border:1px solid #eef4fb;box-shadow:0 6px 18px rgba(19,38,63,0.03);margin-bottom:14px}
+
+  /* Grid for dashboard tiles */
+  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:12px}
+  .tile{padding:12px;border-radius:8px;background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid #eef6ff}
+  .tile .label{font-size:12px;color:var(--muted)}
+  .tile .value{font-weight:800;font-size:20px;margin-top:6px}
+
+  /* Forms, filters */
+  .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .toolbar select,.toolbar input{padding:8px;border-radius:8px;border:1px solid #dbe8fb}
+  .btn{padding:8px 12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-weight:700;cursor:pointer}
+  .btn.ghost{background:transparent;border:1px solid #dbe8fb;color:#0f172a}
+  .muted{color:var(--muted);font-size:13px}
+  .flex{display:flex;gap:10px;align-items:center}
+
+  /* Tables */
+  table{width:100%;border-collapse:collapse;margin-top:10px}
+  th,td{padding:10px;border:1px solid #eef4fb;text-align:left;font-size:14px}
+  th{background:#fbfdff;color:var(--muted)}
+  td.actions button{margin-right:6px;padding:6px 8px;border-radius:6px;border:none;cursor:pointer}
+  .approve{background:var(--success);color:#fff}
+  .reject{background:var(--danger);color:#fff}
+  .view{background:var(--accent);color:#fff}
+  .badge{padding:4px 8px;border-radius:999px;font-size:12px;background:#eef6ff;color:var(--accent);font-weight:700}
+
+  /* Cards and charts */
+  .chart-row{display:flex;gap:12px;flex-wrap:wrap}
+  .chart-card{flex:1;min-width:260px;padding:12px;background:linear-gradient(180deg,#fff,#fbfdff);border-radius:8px;border:1px solid #eef6ff}
+  canvas{width:100%!important;height:220px!important}
+
+  /* Heatmap */
+  .heatmap{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .heat-cell{width:120px;padding:10px;border-radius:8px;color:#fff;text-align:center;font-weight:700}
+  .low{background:#60a5fa}
+  .mid{background:#f59e0b}
+  .high{background:#ef4444}
+
+  /* Modal */
+  .modal{position:fixed;inset:0;background:rgba(3,7,18,0.5);display:none;justify-content:center;align-items:center;padding:18px}
+  .modal.open{display:flex}
+  .modal-card{background:var(--card);padding:16px;border-radius:10px;min-width:320px;max-width:880px;border:1px solid #eef6ff}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+
+  /* responsive */
+  @media (max-width:900px){
+    .sidebar{display:none}
+    .main{padding:12px}
+    canvas{height:200px!important}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- SIDEBAR NAV -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand">HEI Admin Console</div>
+    <div class="muted small">Manage roles, accreditation & reports</div>
+    <div style="height:12px"></div>
+    <div class="nav" id="mainNav">
+      <button class="active" data-page="dashboard">Dashboard</button>
+      <button data-page="users">User & Role Management</button>
+      <button data-page="reports">Reports & Accreditation</button>
+    </div>
+    <div style="height:12px"></div>
+    <div class="small muted">Viewing as</div>
+    <select id="roleView" style="width:100%;padding:8px;border-radius:8px;border:1px solid #dbe8fb;margin-top:8px">
+      <option value="superadmin">Super Admin</option>
+      <option value="admin">Admin</option>
+      <option value="faculty">Faculty</option>
+      <option value="recruiter">Recruiter</option>
+      <option value="external">External Reviewer</option>
+      <option value="student">Student</option>
+    </select>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <header class="top">
+      <h1>Admin — Accreditation & Role Management</h1>
+      <div class="right">
+        <div class="muted">College: Example Institute</div>
+        <button class="btn" id="backupBtn">Backup</button>
+        <button class="btn ghost" id="restoreBtn">Restore</button>
+      </div>
+    </header>
+
+    <!-- === DASHBOARD PAGE === -->
+    <section class="container" id="page-dashboard">
+      <div class="tiles">
+        <div class="tile">
+          <div class="label">Total Students</div>
+          <div class="value" id="statStudents">-</div>
+        </div>
+        <div class="tile">
+          <div class="label">Total Faculty</div>
+          <div class="value" id="statFaculty">-</div>
+        </div>
+        <div class="tile">
+          <div class="label">Pending Verifications</div>
+          <div class="value" id="statPending">-</div>
+        </div>
+        <div class="tile">
+          <div class="label">Verified Activities</div>
+          <div class="value" id="statVerified">-</div>
+        </div>
+      </div>
+
+      <div class="container" style="padding:12px;margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="small muted">Department-wise Metrics</div>
+          <div class="flex">
+            <select id="dashFilterDept" class="small">
+              <option value="">All Departments</option>
+            </select>
+            <select id="dashFilterYear" class="small">
+              <option value="">All Years</option>
+              <option>2025</option><option>2024</option>
+            </select>
+          </div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <canvas id="deptBar"></canvas>
+          </div>
+          <div class="chart-card">
+            <canvas id="metricDoughnut"></canvas>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div class="small muted">Activity Heatmap</div>
+          <div class="heatmap" id="heatmap"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === USER & ROLE MANAGEMENT === -->
+    <section class="container" id="page-users" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">User & Role Management</h2>
+        <div>
+          <button class="btn" id="openBulkBtn">Bulk Import (CSV)</button>
+          <button class="btn" id="openRoleBtn">Create Role</button>
+          <button class="btn ghost" id="reassignAutoBtn">Auto Re-assign Mentors</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="muted small">Roles in system</div>
+      <table id="rolesTable">
+        <thead><tr><th>Role</th><th>Assigned Users</th><th>Permissions</th><th>Scope</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div style="margin-top:14px" class="muted small">Users (sample)</div>
+      <div style="margin-top:8px">
+        <input id="userSearch" placeholder="Search students/faculty..." style="padding:8px;border-radius:8px;border:1px solid #e6eef8;width:260px" />
+      </div>
+      <table id="usersTable">
+        <thead><tr><th>Name</th><th>Roll/ID</th><th>Role</th><th>Dept</th><th>Mentor</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- === ACTIVITY OVERSIGHT === -->
+    <section class="container" id="page-activities" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Activity Oversight</h2>
+        <div class="toolbar">
+          <select id="actDeptFilter"><option value="">All Depts</option></select>
+          <select id="actTypeFilter"><option value="">All Types</option><option value="internship">Internship</option><option value="research">Research</option><option value="extra">Extracurricular</option></select>
+          <select id="actStatusFilter"><option value="">All Status</option><option>Pending</option><option>Verified</option><option>Rejected</option></select>
+          <button class="btn ghost" id="applyActFilters">Apply</button>
+        </div>
+      </div>
+
+      <table id="activityTable">
+        <thead><tr><th>Student</th><th>Activity</th><th>Type</th><th>Dept</th><th>Year</th><th>Status</th><th>Verified By</th><th>Actions</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- === REPORTS & ACCREDITATION === -->
+    <section class="container" id="page-reports" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Reports & Accreditation</h2>
+        <div class="flex">
+          <select id="repYear"><option>2024-25</option><option>2023-24</option></select>
+          <select id="repDept"><option value="">All Departments</option></select>
+          <button class="btn" id="generateNAAC">Generate NAAC Report</button>
+          <button class="btn" id="exportExcel">Export Excel</button>
+          <button class="btn ghost" id="exportPDF">Export PDF</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px" class="muted small">NAAC / NBA relevant metrics (sample)</div>
+      <div class="chart-row" style="margin-top:8px">
+        <div class="chart-card"><canvas id="naacBar"></canvas></div>
+        <div class="chart-card"><canvas id="naacRadar"></canvas></div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="muted small">Export-ready table</div>
+        <table id="reportTable">
+          <thead><tr><th>Dept</th><th>% Internships</th><th>#Publications</th><th>Placement %</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- === RECRUITER ACCESS === -->
+    <section class="container" id="page-recruiters" style="display:none">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <h2 style="margin:0">Recruiter & External Access</h2>
+        <div>
+          <button class="btn" id="createRecruiterBtn">Create Recruiter</button>
+          <button class="btn ghost" id="genTempAccess">Generate Reviewer Link</button>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <div class="muted small">Recruiter Profiles</div>
+        <table id="recruiterTable"><thead><tr><th>Name</th><th>Access</th><th>Dept</th><th>Actions</th></tr></thead><tbody></tbody></table>
+      </div>
+
+      <div style="margin-top:12px" class="muted small">Recruiter Dashboard Preview</div>
+      <div style="margin-top:6px">
+        <div class="chart-row">
+          <div class="chart-card"><canvas id="recruiterBar"></canvas></div>
+          <div class="chart-card"><div id="topPool" class="muted small">Top placement-ready pool will appear here.</div></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === DATA INTEGRATION & SECURITY === -->
+    <section class="container" id="page-integration" style="display:none">
+      <h2>Data Integration & Security</h2>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div style="flex:1">
+          <div class="muted small">Integration</div>
+          <ul>
+            <li>Bulk CSV/Excel import</li>
+            <li>ERP / API connectors (placeholder)</li>
+            <li>Auto field-mapping & validation UI</li>
+          </ul>
+          <button class="btn" id="openImportModal">Import Demo CSV</button>
+        </div>
+        <div style="flex:1">
+          <div class="muted small">Security</div>
+          <ul>
+            <li>Client-side AES-GCM demo (not production)</li>
+            <li>Role-based visibility controls</li>
+            <li>Backup & restore (JSON)</li>
+          </ul>
+          <div style="margin-top:8px">
+            <button class="btn" id="encDemoBtn">Encrypt sample data</button>
+            <button class="btn ghost" id="decDemoBtn">Decrypt sample data</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === ANALYTICS & INSIGHTS === -->
+    <section class="container" id="page-analytics" style="display:none">
+      <h2>Analytics & Insights</h2>
+      <div class="chart-row">
+        <div class="chart-card"><canvas id="trendLine"></canvas></div>
+        <div class="chart-card"><canvas id="facultyVerifications"></canvas></div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="muted small">Alerts & Notifications</div>
+        <ul id="alertsList"></ul>
+      </div>
+    </section>
+
+    <!-- === AUDIT LOGS === -->
+    <section class="container" id="page-audit" style="display:none">
+      <h2>Audit Logs</h2>
+      <div class="muted small">Recent changes & actions (timestamped)</div>
+      <table id="auditTable"><thead><tr><th>When</th><th>User</th><th>Action</th><th>Details</th></tr></thead><tbody></tbody></table>
+    </section>
+
+    <!-- Hidden download anchor -->
+    <a id="hiddenDL" style="display:none"></a>
+  </main>
+</div>
+
+<!-- MODALS (single modal container, content swapped) -->
+<div class="modal" id="modal">
+  <div class="modal-card" id="modalCard">
+    <!-- content injected by JS -->
+  </div>
+</div>
+
+<script>
+/* -------------------------
+   Sample in-memory state (simulate server responses)
+   ------------------------- */
+const state = {
+  departments: ['CSE','ECE','ME','CE'],
+  roles: [
+    {name:'Student', users:1200, perms:['view_self'], scope:'All'},
+    {name:'Faculty', users:85, perms:['verify_activity','view_dept'], scope:'Dept'},
+    {name:'Mentor', users:80, perms:['assign_student','view_dept'], scope:'Dept'},
+    {name:'Recruiter', users:24, perms:['view_shortlisted'], scope:'Placement'},
+    {name:'External Reviewer', users:2, perms:['read_only'], scope:'Limited'}
+  ],
+  users: [
+    {name:'John Doe', id:'CSE001', role:'Student', dept:'CSE', mentor:'Dr A'},
+    {name:'Jane Smith', id:'ECE002', role:'Student', dept:'ECE', mentor:'Dr B'},
+    {name:'Dr A', id:'F001', role:'Faculty', dept:'CSE'},
+  ],
+  activities: [
+    {student:'John Doe', roll:'CSE001', activity:'Internship at X', type:'internship', dept:'CSE', year:2024, status:'Pending', verifiedBy:null},
+    {student:'Jane Smith', roll:'ECE002', activity:'Paper ABC', type:'research', dept:'ECE', year:2024, status:'Verified', verifiedBy:'Dr B'}
+  ],
+  recruiters: [
+    {name:'TCS', access:'placement_pool', dept:'All'},
+    {name:'Infosys', access:'shortlisted', dept:'CSE'}
+  ],
+  audits: []
+};
+
+/* -------------------------
+   Helpers - DOM & Navigation
+   ------------------------- */
+const navButtons = document.querySelectorAll('.nav button');
+const pages = document.querySelectorAll('main .container, main section.container');
+function showPage(pageId){
+  // deactivate nav
+  navButtons.forEach(b=>b.classList.toggle('active', b.dataset.page===pageId));
+  // hide all main page sections
+  document.querySelectorAll('main > section.container').forEach(s=> s.style.display = 'none');
+  // show requested
+  const el = document.getElementById('page-'+pageId);
+  if(el) el.style.display = 'block';
+  // some pages require chart refresh
+  if(pageId==='dashboard') refreshDashboard();
+  if(pageId==='reports') drawNAAC();
+  if(pageId==='recruiters') drawRecruiter();
+  if(pageId==='analytics') drawAnalytics();
+  if(pageId==='audit') renderAudit();
+}
+navButtons.forEach(b=> b.addEventListener('click', ()=> showPage(b.dataset.page)));
+
+/* -------------------------
+   Initial render & populate UI
+   ------------------------- */
+function initUI(){
+  // populate dept selects
+  const deptSelectors = document.querySelectorAll('#dashFilterDept,#repDept,#actDeptFilter,#actDeptFilter,#dashFilterDept,#actDeptFilter,#repDept,#repDept');
+  // simplify selecting proper ones:
+  document.querySelectorAll('#dashFilterDept,#repDept,#actDeptFilter,#actDeptFilter,#repDept').forEach(sel=>{
+    if(!sel) return;
+    state.departments.forEach(d => {
+      const o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o);
+    });
+  });
+
+  // stats
+  document.getElementById('statStudents').textContent = state.users.filter(u=>u.role==='Student').length || 0;
+  document.getElementById('statFaculty').textContent = state.users.filter(u=>u.role==='Faculty').length || 0;
+  document.getElementById('statPending').textContent = state.activities.filter(a=>a.status==='Pending').length;
+  document.getElementById('statVerified').textContent = state.activities.filter(a=>a.status==='Verified').length;
+
+  // roles table
+  renderRoles();
+  renderUsers();
+  renderActivities();
+  renderReportsTable();
+  renderRecruiters();
+  renderHeatmap();
+  drawCharts(); // initial charts
+  showPage('dashboard');
+}
+function renderRoles(){
+  const tbody = document.querySelector('#rolesTable tbody');
+  tbody.innerHTML='';
+  state.roles.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.name}</td><td>${r.users}</td><td>${(r.perms||[]).join(', ')}</td><td>${r.scope}</td>
+      <td class="actions"><button class="btn ghost" onclick="editRole('${r.name}')">Edit</button>
+      <button class="btn" onclick="deleteRole('${r.name}')">Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function renderUsers(filter=''){
+  const tbody = document.querySelector('#usersTable tbody');
+  tbody.innerHTML='';
+  (state.users.filter(u=> (u.name + ' ' + u.id + ' ' + u.dept).toLowerCase().includes(filter.toLowerCase()))).forEach(u=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${u.name}</td><td>${u.id}</td><td>${u.role}</td><td>${u.dept || '-'}</td><td>${u.mentor||'-'}</td>
+      <td class="actions"><button class="btn view" onclick='viewUser("${u.id}")'>View</button>
+      <button class="btn ghost" onclick='reassignMentorManual("${u.id}")'>Reassign Mentor</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('userSearch').addEventListener('input', e=> renderUsers(e.target.value));
+
+/* -------------------------
+   Activities table and actions
+   ------------------------- */
+function renderActivities(rows = state.activities){
+  const tbody = document.querySelector('#activityTable tbody');
+  tbody.innerHTML='';
+  rows.forEach(a=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${a.student}</td><td>${a.activity}</td><td>${a.type}</td><td>${a.dept}</td><td>${a.year}</td>
+      <td>${a.status}</td><td>${a.verifiedBy || '-'}</td>
+      <td class="actions">
+        ${a.status==='Pending' ? `<button class="approve" onclick="approveActivity('${a.roll||a.student}','${a.activity}')">Approve</button>
+        <button class="reject" onclick="rejectActivity('${a.roll||a.student}','${a.activity}')">Reject</button>` : ''}
+        <button class="view" onclick="viewActivity('${a.activity}')">View</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+}
+document.getElementById('applyActFilters').addEventListener('click', ()=>{
+  const dept = document.getElementById('actDeptFilter').value;
+  const type = document.getElementById('actTypeFilter').value;
+  const status = document.getElementById('actStatusFilter').value;
+  let rows = state.activities.slice();
+  if(dept) rows = rows.filter(r=>r.dept===dept);
+  if(type) rows = rows.filter(r=>r.type===type);
+  if(status) rows = rows.filter(r=>r.status===status);
+  renderActivities(rows);
+});
+function approveActivity(roll, activity){
+  const a = state.activities.find(x=>x.activity===activity);
+  if(a){ a.status='Verified'; a.verifiedBy = 'Admin'; pushAudit('Admin','Approve',`Activity "${activity}" for ${a.student}`); renderActivities(); }
+  updateStats();
+}
+function rejectActivity(roll, activity){
+  const a = state.activities.find(x=>x.activity===activity);
+  if(a){ a.status='Rejected'; a.verifiedBy = 'Admin'; pushAudit('Admin','Reject',`Activity "${activity}" for ${a.student}`); renderActivities(); }
+  updateStats();
+}
+function viewActivity(act){ alert(JSON.stringify(state.activities.find(a=>a.activity===act),null,2)); }
+
+/* -------------------------
+   Role CRUD
+   ------------------------- */
+function openModal(html){
+  const modal = document.getElementById('modal'); modal.classList.add('open');
+  document.getElementById('modalCard').innerHTML = html;
+}
+function closeModal(){ document.getElementById('modal').classList.remove('open'); }
+document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') closeModal(); });
+
+document.getElementById('openRoleBtn').addEventListener('click', ()=> {
+  openModal(`
+    <h3>Create Role</h3>
+    <div style="margin-top:8px"><input id="roleName" placeholder="Role name" style="width:100%;padding:8px;border-radius:8px;border:1px solid #eef4fb"/></div>
+    <div style="margin-top:8px"><label class="small muted">Permissions (Ctrl/Cmd to multi-select)</label>
+      <select id="rolePerms" multiple style="width:100%;padding:8px;border-radius:8px">
+        <option value="view_self">View Self</option><option value="verify_activity">Verify Activity</option><option value="export_report">Export Report</option>
+        <option value="assign_mentor">Assign Mentor</option><option value="view_shortlisted">View Shortlisted</option>
+      </select></div>
+    <div class="modal-actions"><button class="btn" onclick="createRole()">Create</button><button class="btn ghost" onclick="closeModal()">Close</button></div>
+  `);
+});
+function createRole(){
+  const name = document.getElementById('roleName').value.trim();
+  const perms = Array.from(document.getElementById('rolePerms').selectedOptions).map(o=>o.value);
+  if(!name){ alert('Role name required'); return; }
+  state.roles.push({name, users:0, perms, scope:'Custom'}); renderRoles(); pushAudit('Admin','Create Role',name); closeModal();
+}
+function editRole(name){
+  const role = state.roles.find(r=>r.name===name);
+  if(!role) return alert('Not found');
+  openModal(`<h3>Edit Role: ${name}</h3>
+    <div style="margin-top:8px"><label>Users: ${role.users}</label></div>
+    <div style="margin-top:8px"><label>Scope: </label><input id="editScope" value="${role.scope}" style="padding:8px"/></div>
+    <div class="modal-actions"><button class="btn" onclick="saveRole('${name}')">Save</button><button class="btn ghost" onclick="closeModal()">Close</button></div>`);
+}
+function saveRole(oldName){
+  const role = state.roles.find(r=>r.name===oldName);
+  if(!role) return;
+  role.scope = document.getElementById('editScope').value || role.scope;
+  renderRoles(); pushAudit('Admin','Edit Role',oldName); closeModal();
+}
+function deleteRole(name){
+  if(!confirm('Delete role '+name+'?')) return;
+  const idx = state.roles.findIndex(r=>r.name===name);
+  if(idx>=0){ state.roles.splice(idx,1); renderRoles(); pushAudit('Admin','Delete Role',name); }
+}
+
+/* -------------------------
+   Users: reassign mentor demo
+   ------------------------- */
+function reassignMentorManual(userId){
+  openModal(`<h3>Reassign Mentor</h3>
+    <div style="margin-top:8px"><label>Select Mentor</label>
+      <select id="mentorSelect" style="width:100%;padding:8px">${state.users.filter(u=>u.role==='Faculty').map(f=>`<option value="${f.name}">${f.name} (${f.dept||'NA'})</option>`).join('')}</select></div>
+    <div class="modal-actions"><button class="btn" onclick="saveMentor('${userId}')">Save</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+}
+function saveMentor(userId){
+  const mentor = document.getElementById('mentorSelect').value;
+  const u = state.users.find(x=>x.id===userId);
+  if(u){ u.mentor = mentor; renderUsers(); pushAudit('Admin','Reassign Mentor',`${u.name} -> ${mentor}`); closeModal(); }
+}
+document.getElementById('reassignAutoBtn').addEventListener('click', ()=>{
+  autoReassignMentors(); alert('Auto reassign done (round-robin demo)'); pushAudit('Admin','Auto Reassign','Round-robin'); renderUsers();
+});
+function autoReassignMentors(){
+  const mentors = state.users.filter(u=>u.role==='Faculty').map(f=>f.name);
+  if(!mentors.length) return;
+  let idx=0;
+  state.users.filter(u=>u.role==='Student').forEach(s=>{ s.mentor = mentors[idx%mentors.length]; idx++; });
+}
+
+/* -------------------------
+   Recruiter features & temp links
+   ------------------------- */
+function renderRecruiters(){
+  const tbody = document.querySelector('#recruiterTable tbody');
+  tbody.innerHTML='';
+  state.recruiters.forEach(r=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${r.name}</td><td>${r.access}</td><td>${r.dept}</td>
+      <td><button class="btn" onclick="viewRecruiter('${r.name}')">View</button>
+      <button class="btn ghost" onclick="genTempLink('${r.name}')">Temp Link</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function viewRecruiter(name){ alert(JSON.stringify(state.recruiters.find(r=>r.name===name),null,2)); }
+function genTempLink(name){
+  const token = btoa(`${name}:${Date.now()}`);
+  const link = `${location.origin}${location.pathname}?reviewer=${token}`;
+  openModal(`<h3>Temporary Link</h3><div class="muted small">Expires in 7 days (demo)</div>
+    <div style="margin-top:8px"><input style="width:100%;padding:8px" value="${link}" /></div>
+    <div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div>`);
+  pushAudit('Admin','Generate Temp Link',name);
+}
+document.getElementById('createRecruiterBtn').addEventListener('click', ()=> {
+  openModal(`<h3>Create Recruiter</h3>
+    <div style="margin-top:8px"><input id="newRecName" placeholder="Company name" style="width:100%;padding:8px"/></div>
+    <div style="margin-top:8px"><select id="newRecAccess" style="width:100%;padding:8px"><option value="placement_pool">Placement Pool</option><option value="shortlisted">Shortlisted CVs</option></select></div>
+    <div class="modal-actions"><button class="btn" onclick="saveRecruiter()">Create</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+});
+function saveRecruiter(){
+  const name = document.getElementById('newRecName').value.trim();
+  const access = document.getElementById('newRecAccess').value;
+  if(!name) return alert('Name required');
+  state.recruiters.push({name,access,dept:'All'});
+  renderRecruiters(); pushAudit('Admin','Create Recruiter',name); closeModal();
+}
+document.getElementById('genTempAccess').addEventListener('click', ()=> genTempLink('External Reviewer'));
+
+/* -------------------------
+   Reports & NAAC sample charts
+   ------------------------- */
+function renderReportsTable(){
+  const tbody = document.querySelector('#reportTable tbody'); tbody.innerHTML='';
+  state.departments.forEach(d=>{
+    const interns = Math.round(Math.random()*30 + 40);
+    const pubs = Math.round(Math.random()*10 + 5);
+    const placement = Math.round(Math.random()*20 + 60);
+    tbody.innerHTML += `<tr><td>${d}</td><td>${interns}%</td><td>${pubs}</td><td>${placement}%</td></tr>`;
+  });
+}
+document.getElementById('generateNAAC').addEventListener('click', ()=> {
+  alert('Generated NAAC report (sample)'); pushAudit('Admin','Generate NAAC',''); renderReportsTable();
+});
+document.getElementById('exportExcel').addEventListener('click', ()=> exportCSVFromTable('reportTable','naac_report.csv'));
+document.getElementById('exportPDF').addEventListener('click', ()=> window.print());
+
+/* -------------------------
+   Export helper (CSV)
+   ------------------------- */
+function exportCSVFromTable(tableId, filename='export.csv'){
+  const rows = Array.from(document.querySelectorAll(`#${tableId} tr`)).map(tr =>
+    Array.from(tr.cells).map(td=> `"${td.innerText.replace(/"/g,'""')}"`).join(',')
+  ).join('\n');
+  const blob = new Blob([rows], {type:'text/csv'});
+  const url = URL.createObjectURL(blob);
+  const a = document.getElementById('hiddenDL'); a.href=url; a.download=filename; a.click(); URL.revokeObjectURL(url);
+  pushAudit('Admin','Export CSV',filename);
+}
+
+/* -------------------------
+   Heatmap & small charts
+   ------------------------- */
+function renderHeatmap(){
+  const container = document.getElementById('heatmap'); container.innerHTML='';
+  state.departments.forEach(d=>{
+    const score = Math.round(Math.random()*100);
+    const cls = score>66? 'high' : score>33 ? 'mid' : 'low';
+    const div = document.createElement('div'); div.className = `heat-cell ${cls}`;
+    div.innerHTML = `<div>${d}</div><div style="font-size:12px;margin-top:6px">${score}%</div>`;
+    container.appendChild(div);
+  });
+}
+
+/* -------------------------
+   Charts with Chart.js (dashboard, naac, recruiter, analytics)
+   ------------------------- */
+let deptBarChart, metricDoughnut, naacBar, naacRadar, recruiterBar, trendLine, facultyVerChart;
+function drawCharts(){
+  // basic departmental arrays
+  const labels = state.departments;
+  const verified = labels.map(d=> state.activities.filter(a=>a.dept===d && a.status==='Verified').length + Math.round(Math.random()*20));
+  const pending = labels.map(d=> state.activities.filter(a=>a.dept===d && a.status==='Pending').length + Math.round(Math.random()*10));
+  const s_f_ratio = labels.map(d=> Math.max(8, Math.round((state.users.filter(u=>u.dept===d && u.role==='Student').length||40) / (state.users.filter(u=>u.dept===d && u.role==='Faculty').length||3))));
+  // dash bar
+  const ctx = document.getElementById('deptBar').getContext('2d');
+  if(deptBarChart) deptBarChart.destroy();
+  deptBarChart = new Chart(ctx, {
+    type:'bar',
+    data:{labels, datasets:[
+      {label:'Verified', data:verified, backgroundColor:'#2f80ed'},
+      {label:'Pending', data:pending, backgroundColor:'#f2994a'},
+      {label:'S/F Ratio', data:s_f_ratio, backgroundColor:'#27ae60'}
+    ]},
+    options:{responsive:true, maintainAspectRatio:false, scales:{y:{beginAtZero:true}}}
+  });
+
+  // doughnut
+  const ctx2 = document.getElementById('metricDoughnut').getContext('2d');
+  const totals = [verified.reduce((a,b)=>a+b,0), pending.reduce((a,b)=>a+b,0)];
+  if(metricDoughnut) metricDoughnut.destroy();
+  metricDoughnut = new Chart(ctx2,{type:'doughnut',data:{labels:['Verified','Pending'],datasets:[{data:totals,backgroundColor:['#2f80ed','#f2994a']}]},options:{responsive:true,maintainAspectRatio:false}});
+}
+function drawNAAC(){
+  // NAAC bar + radar (sample)
+  const labels = state.departments;
+  const interns = labels.map(()=> Math.round(Math.random()*40 + 40));
+  const pubs = labels.map(()=> Math.round(Math.random()*15 + 5));
+  const placements = labels.map(()=> Math.round(Math.random()*30 + 60));
+  const ctx = document.getElementById('naacBar').getContext('2d');
+  if(naacBar) naacBar.destroy();
+  naacBar = new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'% Internships', data:interns, backgroundColor:'#2f80ed'},
+    {label:'#Publications', data:pubs, backgroundColor:'#34d399'},
+    {label:'Placement %', data:placements, backgroundColor:'#f59e0b'}
+  ]},options:{responsive:true,maintainAspectRatio:false}});
+
+  const ctx2 = document.getElementById('naacRadar').getContext('2d');
+  if(naacRadar) naacRadar.destroy();
+  naacRadar = new Chart(ctx2,{type:'radar',data:{labels:['Curriculum','Research','Internships','Placements','Teaching'],datasets:[{label:'Dept avg',data:[65,50,70,75,68],backgroundColor:'rgba(47,128,237,0.2)',borderColor:'#2f80ed'}]},options:{responsive:true,maintainAspectRatio:false}});
+}
+function drawRecruiter(){
+  const labels = ['Skill A','Skill B','Skill C','Skill D'];
+  const data = labels.map(()=> Math.round(Math.random()*50 + 20));
+  const ctx = document.getElementById('recruiterBar').getContext('2d');
+  if(recruiterBar) recruiterBar.destroy();
+  recruiterBar = new Chart(ctx,{type:'bar',data:{labels,datasets:[{label:'Placement-ready',data,backgroundColor:'#2f80ed'}]},options:{responsive:true,maintainAspectRatio:false}});
+  document.getElementById('topPool').innerHTML = `<ul>${Array.from({length:5}).map((_,i)=>`<li>Student ${i+1} — Skill ${['A','B','C','D'][i%4]}</li>`).join('')}</ul>`;
+}
+function drawAnalytics(){
+  const years = ['Y1','Y2','Y3','Y4'];
+  const perf = [65,70,74,78];
+  const ctx = document.getElementById('trendLine').getContext('2d');
+  if(trendLine) trendLine.destroy();
+  trendLine = new Chart(ctx,{type:'line',data:{labels:years,datasets:[{label:'Student Performance',data:perf,borderColor:'#ef4444',fill:false}]},options:{responsive:true,maintainAspectRatio:false}});
+
+  const ctx2 = document.getElementById('facultyVerifications').getContext('2d');
+  const fdata = state.users.filter(u=>u.role==='Faculty').map((f,i)=>Math.round(Math.random()*40+10));
+  if(facultyVerChart) facultyVerChart.destroy();
+  facultyVerChart = new Chart(ctx2,{type:'bar',data:{labels:state.users.filter(u=>u.role==='Faculty').map(f=>f.name),datasets:[{label:'Approvals',data:fdata,backgroundColor:'#2f80ed'}]},options:{responsive:true,maintainAspectRatio:false,scales:{x:{display:false}}}});
+}
+
+/* -------------------------
+   Audit log push & render
+   ------------------------- */
+function pushAudit(user, action, details=''){
+  state.audits.unshift({when:new Date().toLocaleString(), user, action, details});
+  // keep max 200
+  if(state.audits.length>200) state.audits.pop();
+}
+function renderAudit(){
+  const tbody = document.querySelector('#auditTable tbody'); tbody.innerHTML='';
+  state.audits.forEach(a=>{
+    const tr = document.createElement('tr'); tr.innerHTML = `<td>${a.when}</td><td>${a.user}</td><td>${a.action}</td><td>${a.details}</td>`; tbody.appendChild(tr);
+  });
+}
+
+/* -------------------------
+   Backup & Restore (JSON)
+   ------------------------- */
+document.getElementById('backupBtn').addEventListener('click', ()=> {
+  const payload = JSON.stringify(state, null, 2);
+  const blob = new Blob([payload], {type:'application/json'}); const url = URL.createObjectURL(blob);
+  const a = document.getElementById('hiddenDL'); a.href = url; a.download = `backup_${Date.now()}.json`; a.click(); URL.revokeObjectURL(url);
+  pushAudit('Admin','Backup Data','Exported JSON');
+});
+document.getElementById('restoreBtn').addEventListener('click', ()=> {
+  const inp = document.createElement('input'); inp.type='file'; inp.accept='.json'; inp.onchange = e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const r = new FileReader(); r.onload = ev=>{
+      try{ const obj = JSON.parse(ev.target.result); Object.assign(state, obj); initUI(); alert('Restore complete (demo)'); pushAudit('Admin','Restore Data','Imported JSON'); }
+      catch(err){ alert('Invalid file'); }
+    }; r.readAsText(f);
+  }; inp.click();
+});
+
+/* -------------------------
+   Import CSV (simple demo)
+   ------------------------- */
+document.getElementById('openBulkBtn').addEventListener('click', ()=> {
+  openModal(`<h3>Bulk Import CSV</h3>
+    <div class="muted small">Expected headers: name,id,role,dept,mentor</div>
+    <div style="margin-top:8px"><input id="bulkFile" type="file" accept=".csv" /></div>
+    <div class="modal-actions"><button class="btn" onclick="doBulkImport()">Import</button><button class="btn ghost" onclick="closeModal()">Cancel</button></div>`);
+});
+function doBulkImport(){
+  const f = document.getElementById('bulkFile').files[0]; if(!f){ alert('Select CSV'); return; }
+  const r = new FileReader(); r.onload = e=>{
+    const lines = e.target.result.split('\n').map(l=>l.trim()).filter(Boolean);
+    if(lines.length<2){ alert('No data'); return; }
+    const headers = lines.shift().split(',').map(h=>h.trim().toLowerCase());
+    lines.forEach(line=>{
+      const cells = line.split(',').map(c=>c.trim());
+      const obj = {}; cells.forEach((c,i)=> obj[headers[i]] = c);
+      state.users.push({name:obj.name||'Unknown', id:obj.id||('U'+Date.now()%9999), role:obj.role||'Student', dept:obj.dept||'NA', mentor:obj.mentor||''});
+    });
+    renderUsers(); pushAudit('Admin','Bulk Import','CSV'); closeModal(); alert('Imported '+lines.length+' rows (demo)');
+  }; r.readAsText(f);
+}
+
+/* -------------------------
+   Encryption demo (AES-GCM using WebCrypto) - client demo only
+   ------------------------- */
+let demoKey = null;
+async function generateDemoKey(){ demoKey = await crypto.subtle.generateKey({name:'AES-GCM',length:256}, true, ['encrypt','decrypt']); return demoKey; }
+async function encryptText(plain){
+  if(!demoKey) await generateDemoKey();
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder().encode(plain);
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM', iv}, demoKey, enc);
+  const raw = new Uint8Array(iv.byteLength + ct.byteLength); raw.set(iv,0); raw.set(new Uint8Array(ct), iv.byteLength);
+  return btoa(String.fromCharCode(...raw));
+}
+async function decryptText(b64){
+  if(!demoKey) return null;
+  const bytes = Uint8Array.from(atob(b64), c=>c.charCodeAt(0));
+  const iv = bytes.slice(0,12); const ct = bytes.slice(12);
+  const plain = await crypto.subtle.decrypt({name:'AES-GCM', iv}, demoKey, ct);
+  return new TextDecoder().decode(plain);
+}
+document.getElementById('encDemoBtn').addEventListener('click', async ()=>{
+  const sample = 'john@example.com'; const enc = await encryptText(sample);
+  openModal(`<h3>Encrypted (demo)</h3><div style="word-break:break-all">${enc}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div>`);
+  pushAudit('Admin','Encrypt Demo','Encrypted sample email');
+  // store temporary
+  window._demoEncrypted = enc;
+});
+document.getElementById('decDemoBtn').addEventListener('click', async ()=>{
+  if(!window._demoEncrypted) return alert('No sample encrypted data found (run encrypt first)');
+  const dec = await decryptText(window._demoEncrypted);
+  openModal(`<h3>Decrypted (demo)</h3><div>${dec}</div><div class="modal-actions"><button class="btn" onclick="closeModal()">Close</button></div>`);
+});
+
+/* -------------------------
+   Simple audit and alerts
+   ------------------------- */
+function updateStats(){
+  document.getElementById('statPending').textContent = state.activities.filter(a=>a.status==='Pending').length;
+  document.getElementById('statVerified').textContent = state.activities.filter(a=>a.status==='Verified').length;
+}
+function pushSimpleAlerts(){
+  const out = [];
+  if(state.activities.filter(a=>a.status==='Pending').length > 0) out.push(`${state.activities.filter(a=>a.status==='Pending').length} unverified activity records`);
+  if(state.users.filter(u=>u.role==='Student').length === 0) out.push('No students found');
+  const ul = document.getElementById('alertsList'); ul.innerHTML = out.map(o=>`<li style="background:#fff3cd;padding:8px;border-radius:6px;margin-bottom:6px">${o}</li>`).join('');
+}
+
+/* -------------------------
+   Misc UI helpers
+   ------------------------- */
+function viewUser(id){ alert(JSON.stringify(state.users.find(u=>u.id===id),null,2)); }
+function editRolePrompt(name){ editRole(name); }
+function deleteRolePrompt(name){ deleteRole(name); }
+
+/* -------------------------
+   Initial boot
+   ------------------------- */
+initUI();
+pushAudit('System','Init','UI initialized');
+drawCharts();
+drawNAAC();
+drawRecruiter();
+drawAnalytics();
+pushSimpleAlerts();
+
+/* -------------------------
+   Expose a few functions for inline onClick handlers
+   ------------------------- */
+window.openModal = openModal;
+window.closeModal = closeModal;
+window.createRole = createRole;
+window.editRole = editRole;
+window.deleteRole = deleteRole;
+window.viewUser = viewUser;
+window.reassignMentorManual = reassignMentorManual;
+window.approveActivity = approveActivity;
+window.rejectActivity = rejectActivity;
+window.viewActivity = viewActivity;
+window.renderReportsTable = renderReportsTable;
+window.renderRecruiters = renderRecruiters;
+window.renderActivities = renderActivities;
+window.renderUsers = renderUsers;
+window.renderRoles = renderRoles;
+window.renderAudit = renderAudit;
+window.autoReassignMentors = autoReassignMentors;
+window.genTempLink = genTempLink;
+</script>
+</body>
+</html>

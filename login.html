@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - HEI Platform</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Arial, sans-serif;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: url('https://images.unsplash.com/photo-1524865291454-215bdc75819e?q=80&w=688&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D')
+    no-repeat center center/cover;
+    }
+
+    .login-container {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 12px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+      text-align: center;
+      width: 400px;
+    }
+
+    .login-container h1 {
+      margin-bottom: 20px;
+      color: #007bff;
+    }
+
+    .role-boxes {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .role-card {
+      display: block;
+      padding: 20px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #333;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      transition: transform 0.2s ease, background 0.3s ease;
+    }
+
+    .role-card:hover {
+      background: #e6f0ff;
+      transform: translateY(-3px);
+    }
+
+    .role-card strong {
+      font-size: 18px;
+      color: #007bff;
+      display: block;
+      margin-top: 5px;
+    }
+
+    .role-card p {
+      margin: 5px 0 0;
+      font-size: 14px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-container">
+    <h1>Select Your Role</h1>
+
+    <div class="role-boxes">
+      <a href="student-login.html" class="role-card">
+        🎓 <strong>Student</strong>
+        <p>Login with Roll Number & Password</p>
+      </a>
+
+      <a href="faculty-login.html" class="role-card">
+        👨‍🏫 <strong>Faculty</strong>
+        <p>Login with Faculty ID & Password</p>
+      </a>
+
+      <a href="admin-login.html" class="role-card">
+        🏫 <strong>Admin</strong>
+        <p>Login with Admin ID & Password</p>
+      </a>
+    </div>
+  </div>
+
+</body>
+</html>
